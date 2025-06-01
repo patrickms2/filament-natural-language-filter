@@ -1,0 +1,56 @@
+{
+    "name": "hayderhatem/filament-natural-language-filter",
+    "description": "Natural language filtering for Filament tables and forms",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Hayder Hatem",
+            "email": "hayderhatem@example.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "HayderHatem\\FilamentNaturalLanguageFilter\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HayderHatem\\FilamentNaturalLanguageFilter\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^11.0",
+        "filament/filament": "^3.2",
+        "openai-php/laravel": "^0.8",
+        "illuminate/support": "^11.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^11.0",
+        "mockery/mockery": "^1.6",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^1.0",
+        "phpstan/phpstan-phpunit": "^1.0"
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --no-coverage",
+        "test-coverage": "vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover",
+        "cs-check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "vendor/bin/php-cs-fixer fix",
+        "phpstan": "vendor/bin/phpstan analyse --memory-limit=512M"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "HayderHatem\\FilamentNaturalLanguageFilter\\FilamentNaturalLanguageFilterServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+} 
