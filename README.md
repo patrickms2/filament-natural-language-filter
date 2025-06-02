@@ -1,339 +1,190 @@
 # Filament Natural Language Filter
 
-A powerful Filament package that allows users to filter table data using natural language queries powered by OpenAI's GPT models.
-
-## Features
-
-- 🤖 **AI-Powered**: Uses OpenAI's GPT models to understand natural language queries
-- 🌍 **Multi-language Support**: Works with English, Arabic, and other languages
-- ⚡ **Caching**: Built-in caching to reduce API calls and improve performance
-- 🔧 **Configurable**: Extensive configuration options for fine-tuning
-- 📊 **Comprehensive Filtering**: Supports all common database operations
-- 🎨 **Beautiful UI**: Clean and intuitive interface with help documentation
+A simple Filament filter that converts natural language text into database queries using AI.
 
 ## Installation
-
-Install the package via Composer:
 
 ```bash
 composer require hayderhatem/filament-natural-language-filter
 ```
 
-Install the OpenAI PHP client:
+## Configuration
 
-```bash
-composer require openai-php/laravel
-```
-
-Publish the configuration file:
-
+1. Publish the config file:
 ```bash
 php artisan vendor:publish --tag="filament-natural-language-filter-config"
 ```
 
-Publish the language files (optional):
-
-```bash
-php artisan vendor:publish --tag="filament-natural-language-filter-lang"
-```
-
-## Configuration
-
-### Environment Variables
-
-Add your OpenAI API key to your `.env` file:
-
+2. Add your OpenAI API key to your `.env` file:
 ```env
 OPENAI_API_KEY=your-openai-api-key-here
-OPENAI_ORGANIZATION=your-organization-id # Optional
-
-# Natural Language Filter Configuration
-FILAMENT_NL_FILTER_MODEL=gpt-3.5-turbo
-FILAMENT_NL_FILTER_MAX_TOKENS=500
-FILAMENT_NL_FILTER_TEMPERATURE=0.1
-FILAMENT_NL_FILTER_TIMEOUT=30
-FILAMENT_NL_FILTER_CACHE_ENABLED=true
-FILAMENT_NL_FILTER_CACHE_TTL=3600
-```
-
-### OpenAI Setup
-
-Configure OpenAI in your `config/openai.php`:
-
-```php
-return [
-    'api_key' => env('OPENAI_API_KEY'),
-    'organization' => env('OPENAI_ORGANIZATION'),
-];
 ```
 
 ## Usage
 
-### Basic Usage
-
-Add the natural language filter to your Filament resource:
+Add the filter to your Filament table:
 
 ```php
 use HayderHatem\FilamentNaturalLanguageFilter\Filters\NaturalLanguageFilter;
 
-class UserResource extends Resource
+public function table(Table $table): Table
 {
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                // Your columns
-            ])
-            ->filters([
-                NaturalLanguageFilter::make()
-                    ->availableColumns([
-                        'name',
-                        'email', 
-                        'created_at',
-                        'status'
-                    ]),
-            ]);
-    }
+    return $table
+        ->columns([
+            // your columns
+        ])
+        ->filters([
+            NaturalLanguageFilter::make()
+                ->availableColumns([
+                    'id',
+                    'name', 
+                    'email',
+                    'status',
+                    'created_at',
+                    'updated_at'
+                ])
+        ]);
 }
 ```
 
-### Advanced Usage
+### Search Modes
 
+You can configure how the filter triggers searches:
+
+#### Submit Mode (Default) - Search on Enter key
 ```php
-NaturalLanguageFilter::make('search')
-    ->availableColumns([
-        'name',
-        'email',
-        'phone',
-        'created_at',
-        'updated_at',
-        'status',
-        'role',
-        'age'
-    ])
-    ->columnMappings([
-        'full_name' => 'name',
-        'contact' => 'email',
-        'registration_date' => 'created_at'
-    ])
+NaturalLanguageFilter::make()
+    ->availableColumns(['name', 'email', 'status'])
+    ->submitSearch() // Users press Enter to search
 ```
 
-### Using the Trait
-
-For easier integration, use the provided trait:
-
+#### Live Mode - Search as you type
 ```php
-use HayderHatem\FilamentNaturalLanguageFilter\Traits\HasNaturalLanguageFilter;
-
-class UserResource extends Resource
-{
-    use HasNaturalLanguageFilter;
-
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                // Your columns
-            ])
-            ->filters([
-                self::addNaturalLanguageFilter([
-                    'name', 'email', 'created_at', 'status'
-                ]),
-            ]);
-    }
-}
+NaturalLanguageFilter::make()
+    ->availableColumns(['name', 'email', 'status'])
+    ->liveSearch() // Search happens automatically as user types
 ```
 
-## Query Examples
+#### Manual Mode Configuration
+```php
+NaturalLanguageFilter::make()
+    ->availableColumns(['name', 'email', 'status'])
+    ->searchMode('live') // or 'submit'
+```
 
-The AI understands natural language queries and converts them to database filters:
+### When to Use Each Mode
 
-### Basic Filtering
-- `name contains john`
-- `status is active`
-- `email ends with @gmail.com`
-- `age greater than 25`
+**Submit Mode (Default)** - Best for:
+- Large datasets where live search might be slow
+- Complex queries that users want to perfect before searching
+- Reducing API calls to OpenAI (only search when user is ready)
 
-### Date Filtering
-- `created after 2023-01-01`
-- `updated before yesterday`
-- `published between 2022 and 2023`
-- `registered last week`
+**Live Mode** - Best for:
+- Instant feedback and better user experience  
+- Smaller datasets where performance isn't a concern
+- Users who prefer immediate results as they type
 
-### Advanced Queries
-- `users with pending status`
-- `orders greater than 100`
-- `products in electronics category`
-- `customers from last month`
+## How it works
 
-### Multi-language Support
-- `الاسم يحتوي أحمد` (Arabic: name contains Ahmed)
-- `البريد ينتهي بـ gmail.com` (Arabic: email ends with gmail.com)
-- `الحالة نشط` (Arabic: status is active)
+1. **User enters natural language**: "show users named john created after 2023"
+2. **AI processes the text**: Converts it to structured filters based on your available columns
+3. **Database query is built**: `WHERE name LIKE '%john%' AND created_at > '2023-01-01'`
+4. **Results are filtered**: Table shows matching records
 
-## Supported Operators
+## Examples
 
-The package supports all common database operations:
+- "users named john" → `WHERE name LIKE '%john%'`
+- "active users" → `WHERE status = 'active'`
+- "created after 2023" → `WHERE created_at > '2023-01-01'`
+- "email contains gmail" → `WHERE email LIKE '%gmail%'`
 
-- `equals` / `not_equals`
-- `contains` / `starts_with` / `ends_with`
-- `greater_than` / `less_than`
-- `between`
-- `in` / `not_in`
-- `is_null` / `is_not_null`
-- `date_equals` / `date_before` / `date_after` / `date_between`
+## Universal Language Support 🌍
+
+The filter supports **ANY language** with automatic AI translation and understanding:
+
+### Multi-Language Examples
+
+**English:**
+- "show users named john" → `WHERE name LIKE '%john%'`
+- "created after 2023" → `WHERE created_at > '2023-01-01'`
+
+**Arabic (العربية):**
+- "الاسم يحتوي على أحمد" → `WHERE name LIKE '%أحمد%'`
+- "أنشئ بعد 2023" → `WHERE created_at > '2023-01-01'`
+
+**Spanish (Español):**
+- "usuarios con nombre juan" → `WHERE name LIKE '%juan%'`
+- "creado después de 2023" → `WHERE created_at > '2023-01-01'`
+
+**French (Français):**
+- "nom contient marie" → `WHERE name LIKE '%marie%'`
+- "créé après 2023" → `WHERE created_at > '2023-01-01'`
+
+**German (Deutsch):**
+- "benutzer mit namen hans" → `WHERE name LIKE '%hans%'`
+- "erstellt nach 2023" → `WHERE created_at > '2023-01-01'`
+
+**Chinese (中文):**
+- "姓名包含张三" → `WHERE name LIKE '%张三%'`
+- "2023年后创建" → `WHERE created_at > '2023-01-01'`
+
+**Japanese (日本語):**
+- "田中という名前のユーザー" → `WHERE name LIKE '%田中%'`
+- "2023年以降に作成" → `WHERE created_at > '2023-01-01'`
+
+### How It Works
+
+1. **AI Language Detection**: Automatically detects the input language
+2. **Natural Understanding**: Maps language-specific keywords to operators
+3. **Value Preservation**: Keeps original values in their native language/script
+4. **Mixed Language**: Handles mixed-language queries seamlessly
+
+### Mixed Language Queries
+
+The AI can handle mixed-language queries naturally:
+- "name يحتوي على john" ✅
+- "usuario con email gmail.com" ✅  
+- "姓名 contains 张三" ✅
 
 ## Configuration Options
-
-### Model Configuration
 
 ```php
 // config/filament-natural-language-filter.php
 return [
-    'model' => 'gpt-3.5-turbo', // or 'gpt-4', 'gpt-4-turbo-preview'
-    
+    'model' => 'gpt-3.5-turbo', // OpenAI model
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
-        'organization' => env('OPENAI_ORGANIZATION'),
-        'timeout' => 30,
         'max_tokens' => 500,
         'temperature' => 0.1,
+    ],
+    'cache' => [
+        'enabled' => true,
+        'ttl' => 3600, // 1 hour
+    ],
+    'languages' => [
+        'universal_support' => true,
+        'auto_detect_direction' => true,
+        'preserve_original_values' => true,
     ],
 ];
 ```
 
-### Caching Configuration
+### Environment Variables
 
-```php
-'cache' => [
-    'enabled' => true,
-    'ttl' => 3600, // 1 hour
-    'prefix' => 'filament_nl_filter',
-],
-```
-
-### Validation Rules
-
-```php
-'validation' => [
-    'min_length' => 3,
-    'max_length' => 500,
-    'allowed_patterns' => [],
-    'blocked_patterns' => [],
-],
-```
-
-### Supported Filter Types
-
-```php
-'supported_filters' => [
-    'equals',
-    'not_equals',
-    'contains',
-    'starts_with',
-    'ends_with',
-    'greater_than',
-    'less_than',
-    'between',
-    'in',
-    'not_in',
-    'is_null',
-    'is_not_null',
-    'date_equals',
-    'date_before',
-    'date_after',
-    'date_between',
-],
-```
-
-## Localization
-
-The package supports multiple languages. Publish the language files and customize them:
-
-```bash
-php artisan vendor:publish --tag="filament-natural-language-filter-lang"
-```
-
-Available languages:
-- English (`en`)
-- Arabic (`ar`)
-
-## Performance Optimization
-
-### Caching
-
-The package automatically caches OpenAI responses to reduce API calls and improve performance. Configure caching in the config file:
-
-```php
-'cache' => [
-    'enabled' => true,
-    'ttl' => 3600, // Cache for 1 hour
-    'prefix' => 'filament_nl_filter',
-],
-```
-
-### API Usage Optimization
-
-- Use `gpt-3.5-turbo` for faster and cheaper responses
-- Set appropriate `max_tokens` limit
-- Enable caching to avoid duplicate API calls
-- Use `temperature: 0.1` for consistent results
-
-## Troubleshooting
-
-### Common Issues
-
-1. **OpenAI API Key Not Working**
-   - Ensure your API key is correctly set in `.env`
-   - Check that you have sufficient OpenAI credits
-   - Verify the API key has the necessary permissions
-
-2. **No Results Returned**
-   - Check the logs for OpenAI API errors
-   - Ensure your query is clear and specific
-   - Verify the available columns are correctly configured
-
-3. **Performance Issues**
-   - Enable caching to reduce API calls
-   - Use `gpt-3.5-turbo` instead of `gpt-4` for faster responses
-   - Reduce `max_tokens` if responses are too long
-
-### Logging
-
-Enable logging to debug issues:
-
-```php
-'logging' => [
-    'enabled' => true,
-    'channel' => 'default',
-    'level' => 'info',
-],
+```env
+OPENAI_API_KEY=your-openai-api-key-here
+FILAMENT_NL_FILTER_UNIVERSAL_SUPPORT=true
+FILAMENT_NL_FILTER_AUTO_DETECT_DIRECTION=true
+FILAMENT_NL_FILTER_PRESERVE_ORIGINAL_VALUES=true
 ```
 
 ## Requirements
 
 - PHP 8.1+
 - Laravel 10+
-- Filament 3.x
+- Filament 3+
 - OpenAI API key
 
 ## License
 
-This package is open-sourced software licensed under the [MIT license](LICENSE.md).
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security
-
-If you discover any security-related issues, please email the maintainer instead of using the issue tracker.
-
-## Credits
-
-- [Hayder Hatem](https://github.com/hayderhatem)
-- [All Contributors](../../contributors)
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently. 
+MIT 

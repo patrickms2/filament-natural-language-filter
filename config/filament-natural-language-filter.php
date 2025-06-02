@@ -1,19 +1,6 @@
 <?php
 
-use HayderHatem\FilamentNaturalLanguageFilter\Enums\ProcessorType;
-
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Processor Type Configuration
-    |--------------------------------------------------------------------------
-    |
-    | The package now uses only LLM (AI-powered) processing with OpenAI.
-    | Custom processing has been removed.
-    |
-    */
-    'processor_type' => env('FILAMENT_NL_FILTER_PROCESSOR_TYPE', ProcessorType::LLM->value),
-
     /*
     |--------------------------------------------------------------------------
     | OpenAI Model Configuration
@@ -37,7 +24,6 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'organization' => env('OPENAI_ORGANIZATION'),
-        'timeout' => env('FILAMENT_NL_FILTER_TIMEOUT', 30),
         'max_tokens' => env('FILAMENT_NL_FILTER_MAX_TOKENS', 500),
         'temperature' => env('FILAMENT_NL_FILTER_TEMPERATURE', 0.1),
     ],
@@ -68,12 +54,21 @@ return [
     'validation' => [
         'min_length' => 3,
         'max_length' => 500,
-        'allowed_patterns' => [
-            // Add regex patterns for allowed query formats
-        ],
-        'blocked_patterns' => [
-            // Add regex patterns for blocked query formats
-        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Language Support
+    |--------------------------------------------------------------------------
+    |
+    | Configure universal language support for natural language processing.
+    | The AI automatically detects and processes queries in any language.
+    |
+    */
+    'languages' => [
+        'universal_support' => env('FILAMENT_NL_FILTER_UNIVERSAL_SUPPORT', true),
+        'auto_detect_direction' => env('FILAMENT_NL_FILTER_AUTO_DETECT_DIRECTION', true),
+        'preserve_original_values' => env('FILAMENT_NL_FILTER_PRESERVE_ORIGINAL_VALUES', true),
     ],
 
     /*

@@ -65,7 +65,6 @@ class NaturalLanguageProcessor implements NaturalLanguageProcessorInterface
                 ],
                 'temperature' => config('filament-natural-language-filter.openai.temperature', 0.1),
                 'max_tokens' => config('filament-natural-language-filter.openai.max_tokens', 500),
-                'timeout' => config('filament-natural-language-filter.openai.timeout', 30),
             ]);
 
             $content = $response->choices[0]->message->content;
@@ -102,7 +101,10 @@ class NaturalLanguageProcessor implements NaturalLanguageProcessorInterface
         $minLength = config('filament-natural-language-filter.validation.min_length', 3);
         $maxLength = config('filament-natural-language-filter.validation.max_length', 500);
 
-        return !empty($query) && strlen($query) >= $minLength && strlen($query) <= $maxLength;
+        // Use mb_strlen for proper Unicode character counting for all languages
+        $length = mb_strlen($query, 'UTF-8');
+
+        return !empty($query) && $length >= $minLength && $length <= $maxLength;
     }
 
     public function getSupportedFilterTypes(): array
@@ -164,17 +166,25 @@ IMPORTANT RULES:
 3. Use only these operators: {$supportedOperators}
 4. For date operations, convert relative dates (yesterday, last week, etc.) to actual dates
 5. Be flexible with column name matching (e.g., 'name' could match 'full_name', 'user_name', etc.)
-6. If the query is unclear or cannot be processed, return an empty array: []
+6. Understand queries in ANY language and convert them appropriately
+7. If the query is unclear or cannot be processed, return an empty array: []
 
 RESPONSE FORMAT:
 [{\"column\": \"column_name\", \"operator\": \"operator_type\", \"value\": \"filter_value\"}]
 
-EXAMPLES:
-- 'users created after 2023' → [{\"column\": \"created_at\", \"operator\": \"date_after\", \"value\": \"2023-01-01\"}]
-- 'name contains john' → [{\"column\": \"name\", \"operator\": \"contains\", \"value\": \"john\"}]
-- 'status is active' → [{\"column\": \"status\", \"operator\": \"equals\", \"value\": \"active\"}]
-- 'age between 25 and 35' → [{\"column\": \"age\", \"operator\": \"between\", \"value\": [25, 35]}]
-- 'email ends with gmail.com' → [{\"column\": \"email\", \"operator\": \"ends_with\", \"value\": \"gmail.com\"}]
+EXAMPLES (Multiple Languages):
+- English: 'users created after 2023' → [{\"column\": \"created_at\", \"operator\": \"date_after\", \"value\": \"2023-01-01\"}]
+- Arabic: 'الاسم يحتوي على أحمد' → [{\"column\": \"name\", \"operator\": \"contains\", \"value\": \"أحمد\"}]
+- Spanish: 'usuarios con nombre juan' → [{\"column\": \"name\", \"operator\": \"contains\", \"value\": \"juan\"}]
+- French: 'nom contient marie' → [{\"column\": \"name\", \"operator\": \"contains\", \"value\": \"marie\"}]
+- German: 'benutzer erstellt nach 2023' → [{\"column\": \"created_at\", \"operator\": \"date_after\", \"value\": \"2023-01-01\"}]
+- Chinese: '姓名包含张三' → [{\"column\": \"name\", \"operator\": \"contains\", \"value\": \"张三\"}]
+
+LANGUAGE HANDLING:
+- Automatically detect and understand the input language
+- Map language-specific keywords to operators (contains, equals, between, etc.)
+- Preserve original values (names, text) in their original language
+- Handle mixed-language queries naturally
 
 Current locale: {$this->locale}";
     }
@@ -188,6 +198,7 @@ Current locale: {$this->locale}";
             $prompt .= "\nPlease use only these column names in your response.";
         }
 
+        $prompt .= "\n\nNote: The query may be in any language. Please understand the intent and map keywords to the appropriate operators automatically.";
         $prompt .= "\n\nReturn only the JSON array, no additional text or explanation.";
 
         return $prompt;
