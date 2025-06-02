@@ -14,7 +14,7 @@ class NaturalLanguageFilter extends BaseFilter
     protected array $availableColumns = [];
     protected array $customColumnMappings = [];
     protected ?NaturalLanguageProcessorInterface $processor = null;
-    protected string $searchMode = 'submit'; // 'live' or 'submit'
+    protected string $searchMode = 'submit';
 
     public static function make(?string $name = 'natural_language'): static
     {
@@ -88,7 +88,6 @@ class NaturalLanguageFilter extends BaseFilter
                 ...$autoDetectDirection ? ['dir' => 'auto', 'lang' => 'auto'] : [],
             ]);
 
-        // Configure the input based on search mode
         if ($this->searchMode === 'live') {
             $helperText = $universalSupport
                 ? 'Type your query in any language - search happens automatically | اكتب استعلامك بأي لغة | escriba su consulta en cualquier idioma'
@@ -102,7 +101,6 @@ class NaturalLanguageFilter extends BaseFilter
                 ->debounce(800)
                 ->helperText($helperText);
         } else {
-            // Submit mode - search on Enter
             $helperText = $universalSupport
                 ? 'Enter your query in any language and press Enter | أدخل استعلامك بأي لغة واضغط Enter | ingrese su consulta en cualquier idioma y presione Enter'
                 : 'Enter your query in natural language and press Enter to apply';
@@ -133,7 +131,6 @@ class NaturalLanguageFilter extends BaseFilter
 
     public function apply(Builder $query, array $data = []): Builder
     {
-        // Early return if no query or query is too short
         if (empty($data['query']) || strlen(trim($data['query'])) < 3) {
             return $query;
         }
@@ -153,14 +150,12 @@ class NaturalLanguageFilter extends BaseFilter
 
             $filters = $processor->processQuery($queryText, $this->getAvailableColumns());
 
-            // Log what the AI processor returned for debugging
             Log::info('NaturalLanguageFilter - AI Processing Result', [
                 'user_query' => $queryText,
                 'available_columns' => $this->getAvailableColumns(),
                 'ai_filters' => $filters
             ]);
 
-            // Only apply filters if we have valid results
             if (empty($filters)) {
                 return $query;
             }

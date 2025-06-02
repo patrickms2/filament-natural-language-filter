@@ -5,21 +5,13 @@ return [
     |--------------------------------------------------------------------------
     | OpenAI Model Configuration
     |--------------------------------------------------------------------------
-    |
-    | Configure which OpenAI model to use for natural language processing.
-    | Available models: gpt-3.5-turbo, gpt-4, gpt-4-turbo-preview
-    |
     */
     'model' => env('FILAMENT_NL_FILTER_MODEL', 'gpt-3.5-turbo'),
 
     /*
     |--------------------------------------------------------------------------
-    | OpenAI API Configuration
+    | OpenAI API Configuration  
     |--------------------------------------------------------------------------
-    |
-    | Configure OpenAI API settings. The API key should be set in your
-    | environment file as OPENAI_API_KEY.
-    |
     */
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
@@ -32,14 +24,10 @@ return [
     |--------------------------------------------------------------------------
     | Cache Configuration
     |--------------------------------------------------------------------------
-    |
-    | Configure caching for natural language processing results to improve
-    | performance and reduce API calls.
-    |
     */
     'cache' => [
         'enabled' => env('FILAMENT_NL_FILTER_CACHE_ENABLED', true),
-        'ttl' => env('FILAMENT_NL_FILTER_CACHE_TTL', 3600), // 1 hour
+        'ttl' => env('FILAMENT_NL_FILTER_CACHE_TTL', 3600),
         'prefix' => 'filament_nl_filter',
     ],
 
@@ -47,9 +35,6 @@ return [
     |--------------------------------------------------------------------------
     | Validation Rules
     |--------------------------------------------------------------------------
-    |
-    | Configure validation rules for natural language queries.
-    |
     */
     'validation' => [
         'min_length' => 3,
@@ -60,10 +45,6 @@ return [
     |--------------------------------------------------------------------------
     | Language Support
     |--------------------------------------------------------------------------
-    |
-    | Configure universal language support for natural language processing.
-    | The AI automatically detects and processes queries in any language.
-    |
     */
     'languages' => [
         'universal_support' => env('FILAMENT_NL_FILTER_UNIVERSAL_SUPPORT', true),
@@ -75,10 +56,6 @@ return [
     |--------------------------------------------------------------------------
     | Supported Filter Types
     |--------------------------------------------------------------------------
-    |
-    | Define which filter types are supported by the natural language processor.
-    | You can disable certain filter types by removing them from this array.
-    |
     */
     'supported_filters' => [
         'equals',
@@ -103,9 +80,6 @@ return [
     |--------------------------------------------------------------------------
     | Logging Configuration
     |--------------------------------------------------------------------------
-    |
-    | Configure logging for natural language filter operations.
-    |
     */
     'logging' => [
         'enabled' => env('FILAMENT_NL_FILTER_LOGGING', true),

@@ -43,7 +43,6 @@ class NaturalLanguageProcessor implements NaturalLanguageProcessorInterface
             return [];
         }
 
-        // Check cache first
         $cacheKey = $this->getCacheKey($query, $availableColumns);
         if (config('filament-natural-language-filter.cache.enabled', true)) {
             $cached = Cache::get($cacheKey);
@@ -70,7 +69,6 @@ class NaturalLanguageProcessor implements NaturalLanguageProcessorInterface
             $content = $response->choices[0]->message->content;
             $result = $this->parseResponse($content);
 
-            // Cache the result
             if (config('filament-natural-language-filter.cache.enabled', true) && !empty($result)) {
                 $ttl = config('filament-natural-language-filter.cache.ttl', 3600);
                 Cache::put($cacheKey, $result, $ttl);
@@ -101,7 +99,6 @@ class NaturalLanguageProcessor implements NaturalLanguageProcessorInterface
         $minLength = config('filament-natural-language-filter.validation.min_length', 3);
         $maxLength = config('filament-natural-language-filter.validation.max_length', 500);
 
-        // Use mb_strlen for proper Unicode character counting for all languages
         $length = mb_strlen($query, 'UTF-8');
 
         return !empty($query) && $length >= $minLength && $length <= $maxLength;
@@ -119,20 +116,17 @@ class NaturalLanguageProcessor implements NaturalLanguageProcessorInterface
 
     public function setCustomColumnMappings(array $mappings): void
     {
-        // LLM processor doesn't use custom column mappings as it relies on AI
-        // But we implement this for interface compliance
+        // Interface compliance - not used with AI processing
     }
 
     public function getCustomColumnMappings(): array
     {
-        // LLM processor doesn't use custom column mappings
         return [];
     }
 
     protected function checkOpenAiAvailability(): bool
     {
         try {
-            // Check if OpenAI service is available
             $hasOpenAiClass = class_exists(\OpenAI\Laravel\Facades\OpenAI::class);
             $hasApiKey = !empty(config('filament-natural-language-filter.openai.api_key')) || !empty(config('openai.api_key'));
             $isBound = app()->bound('openai');
@@ -207,14 +201,11 @@ Current locale: {$this->locale}";
     protected function parseResponse(string $response): array
     {
         try {
-            // Clean the response to extract JSON
             $response = trim($response);
 
-            // Remove markdown code blocks if present
             $response = preg_replace('/^```(?:json)?\s*/', '', $response);
             $response = preg_replace('/\s*```$/', '', $response);
 
-            // Remove any text before the first [ or after the last ]
             if (preg_match('/\[.*\]/s', $response, $matches)) {
                 $response = $matches[0];
             }
@@ -234,7 +225,6 @@ Current locale: {$this->locale}";
                 return [];
             }
 
-            // Validate each filter
             $validatedFilters = [];
             foreach ($filters as $filter) {
                 if ($this->validateFilter($filter)) {
@@ -255,17 +245,14 @@ Current locale: {$this->locale}";
 
     protected function validateFilter(array $filter): bool
     {
-        // Check required keys
         if (!isset($filter['column'], $filter['operator'], $filter['value'])) {
             return false;
         }
 
-        // Check if operator is supported
         if (!in_array($filter['operator'], $this->getSupportedFilterTypes())) {
             return false;
         }
 
-        // Additional validation for specific operators
         if (in_array($filter['operator'], ['between', 'date_between'])) {
             return is_array($filter['value']) && count($filter['value']) === 2;
         }
