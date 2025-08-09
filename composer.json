@@ -1,5 +1,5 @@
 {
-    "name": "hayderhatem/filament-natural-language-filter",
+    "name": "patrickms2/filament-natural-language-filter",
     "description": "Natural language filtering for Filament tables and forms",
     "type": "library",
     "license": "MIT",
